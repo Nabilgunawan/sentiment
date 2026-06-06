@@ -98,6 +98,13 @@ body {
   justify-content: space-between;
 }
 
+.header-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
 .header-logo {
   display: flex;
   align-items: center;
@@ -120,14 +127,12 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-.header-logo span::after {
-  content: ' • Sentiment';
+.header-subtext {
+  font-size: 0.68rem;
+  color: var(--text-muted);
   font-weight: 500;
-  font-size: 1.05rem;
-  color: var(--primary);
-  background: none;
-  -webkit-background-clip: initial;
-  -webkit-text-fill-color: initial;
+  margin-left: 38px; /* Aligns perfectly under the text (26px SVG + 12px gap) */
+  letter-spacing: 0.03em;
 }
 
 .header-actions {
