@@ -1,5 +1,6 @@
 import re
 import math
+import pandas as pd
 
 
 STOPWORDS_ID = {
@@ -150,5 +151,3 @@ def preprocess_dataframe(df, text_column="Konten", do_stemming=False):
         )
     return df
 
-
-import pandas as pd
