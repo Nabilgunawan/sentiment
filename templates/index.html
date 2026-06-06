@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analisis Sentimen Media Sosial</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-brand">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          <path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/>
+        </svg>
+        <span>Sentimen Analisis</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <!-- Upload Section -->
+    <section id="upload-section" class="section">
+      <div class="upload-card">
+        <div class="upload-header">
+          <h1>Analisis Sentimen Media Sosial</h1>
+          <p class="subtitle">Upload file hasil scraping untuk menganalisis sentimen, engagement, dan tren secara otomatis</p>
+        </div>
+
+        <div id="drop-zone" class="drop-zone">
+          <div class="drop-zone-content" id="drop-content">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <p class="drop-text">Seret file ke sini atau <span class="browse-link">pilih file</span></p>
+            <p class="drop-hint">CSV, XLSX, atau HTML &mdash; Maks 50MB</p>
+          </div>
+          <div id="file-preview" class="file-preview hidden">
+            <div class="file-info">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <div>
+                <p class="file-name" id="file-name"></p>
+                <p class="file-size" id="file-size"></p>
+              </div>
+            </div>
+            <button id="remove-file" class="btn-ghost">&times;</button>
+          </div>
+          <input type="file" id="file-input" accept=".csv,.xlsx,.html,.htm" hidden />
+        </div>
+
+        <div class="upload-options">
+          <label class="checkbox-label">
+            <input type="checkbox" id="stemming-toggle" />
+            <span class="checkbox-custom"></span>
+            <span>Aktifkan stemming (lebih lambat)</span>
+          </label>
+        </div>
+
+        <button id="btn-analyze" class="btn-primary" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          Analisis Sentimen
+        </button>
+
+        <div class="upload-footer">
+          <span>Belum punya data?</span>
+          <a href="/sample" class="sample-link">Download sample data CSV</a>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading-section" class="loading-section hidden">
+        <div class="loading-card">
+          <div class="loader">
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+          </div>
+          <h3>Menganalisis Data</h3>
+          <p id="loading-status">Memvalidasi struktur file...</p>
+          <div class="loading-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-steps">
+              <span class="step" data-step="1">Validasi</span>
+              <span class="step" data-step="2">Bersihkan</span>
+              <span class="step" data-step="3">Skor</span>
+              <span class="step" data-step="4">Agregasi</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div id="error-section" class="error-section hidden">
+        <div class="error-card">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <h3>Gagal Memproses File</h3>
+          <p id="error-message"></p>
+          <button id="btn-retry" class="btn-secondary">Coba Lagi</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard-section" class="section hidden">
+      <!-- Summary Bar -->
+      <div class="summary-bar">
+        <div class="summary-info">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <span id="summary-text">Menganalisis <strong>0</strong> post</span>
+          <span class="summary-dot" id="summary-dup" hidden>
+            (<span id="dup-count">0</span> duplikat dihapus)
+          </span>
+        </div>
+        <div class="summary-actions">
+          <button id="btn-new-analysis" class="btn-ghost">Upload Baru</button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="kpi-card"><div class="kpi-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="kpi-value" id="kpi-total-post">0</div><div class="kpi-label">Total Post</div></div>
+        <div class="kpi-card"><div class="kpi-icon purple"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="kpi-value" id="kpi-accounts">0</div><div class="kpi-label">Akun Unik</div></div>
+        <div class="kpi-card"><div class="kpi-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-3.3H14z"/></svg></div><div class="kpi-value" id="kpi-positive">0</div><div class="kpi-label">Positif</div></div>
+        <div class="kpi-card"><div class="kpi-icon yellow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></div><div class="kpi-value" id="kpi-neutral">0</div><div class="kpi-label">Netral</div></div>
+        <div class="kpi-card"><div class="kpi-icon red"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 3.3H10z"/></svg></div><div class="kpi-value" id="kpi-negative">0</div><div class="kpi-label">Negatif</div></div>
+        <div class="kpi-card"><div class="kpi-icon orange"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg></div><div class="kpi-value" id="kpi-engagement">0</div><div class="kpi-label">Total Engagement</div></div>
+      </div>
+
+      <!-- Charts Row 1 -->
+      <div class="chart-grid-2col">
+        <div class="card"><div class="card-header"><h3>Distribusi Sentimen</h3></div><div class="card-body"><canvas id="sentiment-chart"></canvas></div></div>
+        <div class="card"><div class="card-header"><h3>Tren Sentimen Harian</h3></div><div class="card-body"><canvas id="trend-chart"></canvas></div></div>
+      </div>
+
+      <!-- Charts Row 2 -->
+      <div class="chart-grid-2col">
+        <div class="card"><div class="card-header"><h3>Top Akun / Media</h3></div><div class="card-body chart-scroll"><canvas id="account-chart"></canvas></div></div>
+        <div class="card"><div class="card-header"><h3>Top Keywords</h3></div><div class="card-body"><div id="keyword-cloud" class="keyword-cloud"></div></div></div>
+      </div>
+
+      <!-- Insight Panel -->
+      <div class="card insight-card">
+        <div class="card-header">
+          <h3>Executive Summary</h3>
+          <button id="btn-download-summary" class="btn-ghost btn-sm">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download
+          </button>
+        </div>
+        <div class="card-body">
+          <div id="insight-content" class="insight-content markdown-body"></div>
+        </div>
+      </div>
+
+      <!-- Detail Table -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Detail Data</h3>
+          <div class="header-actions">
+            <button id="btn-download-csv" class="btn-ghost btn-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              CSV
+            </button>
+            <button id="btn-download-json" class="btn-ghost btn-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              JSON
+            </button>
+          </div>
+        </div>
+        <div class="card-body table-wrapper">
+          <div class="table-scroll">
+            <table id="detail-table" class="data-table">
+              <thead id="table-head"></thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
+          <div class="table-footer">
+            <span id="table-info">Menampilkan 0 dari 0 data</span>
+            <div class="table-nav">
+              <button id="btn-prev" class="btn-ghost btn-sm" disabled>&larr; Sebelumnya</button>
+              <span id="table-page">Halaman 1</span>
+              <button id="btn-next" class="btn-ghost btn-sm">Selanjutnya &rarr;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>Social Media Sentiment Analyzer &mdash; Dibangun dengan Flask &amp; Chart.js</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
