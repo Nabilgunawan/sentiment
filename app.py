@@ -19,8 +19,11 @@ from modules.summary import generate_executive_summary
 from modules.exporter import export_to_csv, export_to_json
 
 app = Flask(__name__)
-app.secret_key = os.urandom(32).hex()
-app.config["UPLOAD_FOLDER"] = os.path.join(os.path.dirname(__file__), "uploads")
+app.secret_key = os.environ.get("SECRET_KEY", os.urandom(32).hex())
+app.config["UPLOAD_FOLDER"] = os.environ.get(
+    "UPLOAD_FOLDER",
+    os.path.join(os.path.dirname(__file__), "uploads"),
+)
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
