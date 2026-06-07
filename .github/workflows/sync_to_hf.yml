@@ -13,6 +13,10 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
