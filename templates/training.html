@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SentimenID — Model Training</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <div class="header-logo-container">
+        <div class="header-logo">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/>
+          </svg>
+          <span>Model Training</span>
+        </div>
+        <div class="header-subtext">Fine-tune IndoBERT untuk analisis sentimen Indonesia</div>
+      </div>
+      <div class="header-actions">
+        <a href="/" class="btn btn-ghost btn-sm">← Dashboard</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top:24px;max-width:900px">
+    <!-- Training Form -->
+    <div class="panel">
+      <div class="panel-header"><h3>🎯 Fine-Tune Model</h3></div>
+      <div class="panel-body">
+        <form id="training-form" enctype="multipart/form-data">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+            <div>
+              <label style="font-size:.8rem;color:var(--text2);margin-bottom:4px;display:block">Tipe Model</label>
+              <select name="model_type" id="model-type" class="form-input">
+                <option value="sentiment">Sentiment (Positif/Netral/Negatif)</option>
+                <option value="emotion">Emotion (7 Emosi)</option>
+                <option value="sarcasm">Sarcasm (Ya/Tidak)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:.8rem;color:var(--text2);margin-bottom:4px;display:block">Epochs</label>
+              <input type="number" name="epochs" value="5" min="1" max="50" class="form-input" />
+            </div>
+            <div>
+              <label style="font-size:.8rem;color:var(--text2);margin-bottom:4px;display:block">Kolom Teks</label>
+              <input type="text" name="text_column" value="text" class="form-input" />
+            </div>
+            <div>
+              <label style="font-size:.8rem;color:var(--text2);margin-bottom:4px;display:block">Kolom Label</label>
+              <input type="text" name="label_column" value="label" class="form-input" />
+            </div>
+            <div>
+              <label style="font-size:.8rem;color:var(--text2);margin-bottom:4px;display:block">Batch Size</label>
+              <input type="number" name="batch_size" value="16" min="4" max="128" class="form-input" />
+            </div>
+            <div>
+              <label style="font-size:.8rem;color:var(--text2);margin-bottom:4px;display:block">Learning Rate</label>
+              <input type="text" name="learning_rate" value="2e-5" class="form-input" />
+            </div>
+          </div>
+
+          <div style="margin-bottom:20px">
+            <label style="font-size:.8rem;color:var(--text2);margin-bottom:4px;display:block">Dataset Berlabel (CSV/XLSX)</label>
+            <input type="file" name="file" id="training-file" accept=".csv,.xlsx" class="form-input" />
+            <p style="font-size:.7rem;color:var(--text3);margin-top:4px">File harus memiliki kolom teks dan label sesuai konfigurasi di atas.</p>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="btn-start-training">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Mulai Training
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Training Progress -->
+    <div class="panel" id="training-progress-panel" style="display:none">
+      <div class="panel-header"><h3>⏳ Training Progress</h3></div>
+      <div class="panel-body">
+        <div class="progress-bar" style="margin-bottom:16px">
+          <div class="progress-fill" id="train-progress-fill" style="width:0%"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center">
+          <div><div style="font-size:.7rem;color:var(--text3)">Epoch</div><div style="font-size:1.2rem;font-weight:700;color:var(--text)" id="train-epoch">0/0</div></div>
+          <div><div style="font-size:.7rem;color:var(--text3)">Train Loss</div><div style="font-size:1.2rem;font-weight:700;color:#f59e0b" id="train-loss">-</div></div>
+          <div><div style="font-size:.7rem;color:var(--text3)">Val Loss</div><div style="font-size:1.2rem;font-weight:700;color:#3b82f6" id="val-loss">-</div></div>
+          <div><div style="font-size:.7rem;color:var(--text3)">Val Accuracy</div><div style="font-size:1.2rem;font-weight:700;color:#22c55e" id="val-accuracy">-</div></div>
+        </div>
+        <div id="train-status-msg" style="text-align:center;margin-top:16px;font-size:.85rem;color:var(--text2)"></div>
+      </div>
+    </div>
+
+    <!-- Evaluation Results -->
+    <div class="panel" id="eval-panel" style="display:none">
+      <div class="panel-header"><h3>📊 Evaluation Results</h3></div>
+      <div class="panel-body" id="eval-content"></div>
+    </div>
+
+    <!-- Deploy Trained Model (ZIP from Colab/Kaggle) -->
+    <div class="panel" id="deploy-panel">
+      <div class="panel-header"><h3>📦 Deploy Model Hasil Training (ZIP)</h3></div>
+      <div class="panel-body">
+        <p style="font-size:.8rem;color:var(--text2);margin-bottom:16px">
+          Upload file ZIP hasil training dari Google Colab / Kaggle. Model akan langsung aktif tanpa restart.
+        </p>
+        <form id="deploy-form" enctype="multipart/form-data">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+            <div>
+              <label style="font-size:.8rem;color:var(--text2);margin-bottom:4px;display:block">Tipe Model</label>
+              <select name="task" id="deploy-task" class="form-input">
+                <option value="sentiment">Sentiment</option>
+                <option value="emotion">Emotion</option>
+                <option value="sarcasm">Sarcasm</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:.8rem;color:var(--text2);margin-bottom:4px;display:block">File Model (.zip)</label>
+              <input type="file" name="file" id="deploy-file" accept=".zip" class="form-input" />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="btn-deploy">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Deploy Model
+          </button>
+        </form>
+        <div id="deploy-status" style="margin-top:12px;font-size:.85rem;display:none"></div>
+      </div>
+    </div>
+
+    <!-- Label Guide -->
+    <div class="panel">
+      <div class="panel-header"><h3>📖 Panduan Label Dataset</h3></div>
+      <div class="panel-body" style="font-size:.8rem;color:var(--text2);line-height:1.8">
+        <p><strong>Sentiment:</strong> Positive, Neutral, Negative</p>
+        <p><strong>Emotion:</strong> Marah, Senang, Sedih, Takut, Jijik, Terkejut, Netral</p>
+        <p><strong>Sarcasm:</strong> Sarcasm, Not Sarcasm</p>
+        <p style="margin-top:8px;color:var(--text3)">Format CSV: kolom pertama = teks, kolom kedua = label. Nama kolom dapat dikonfigurasi.</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/training.js') }}"></script>
+</body>
+</html>

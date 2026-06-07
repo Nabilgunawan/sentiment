@@ -133,7 +133,7 @@ def parse_file(filepath, filename):
             except (UnicodeDecodeError, Exception):
                 continue
         else:
-            df = pd.read_csv(filepath, encoding="utf-8", errors="replace")
+            df = pd.read_csv(filepath, encoding="utf-8", encoding_errors="replace")
     elif ext == "xlsx":
         df = pd.read_excel(filepath, engine="openpyxl")
     elif ext in ("html", "htm"):

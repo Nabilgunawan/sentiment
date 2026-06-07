@@ -3,14 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Drone Emprit — Analisis Sentimen Media Sosial</title>
+  <title>SentimenID — Platform Analisis Sentimen Media Sosial Indonesia</title>
+  <meta name="description" content="Platform analisis sentimen media sosial Indonesia berbasis IndoBERT Transformer dengan deteksi emosi, sarkasme, dan topic modeling." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
 <body>
-  <header class="header">
+  <header class="header" id="main-header">
     <div class="container header-inner">
       <div class="header-logo-container">
         <div class="header-logo">
@@ -18,12 +22,16 @@
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             <path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/>
           </svg>
-          <span>Analisis Sentimen Medsos</span>
+          <span>SentimenID</span>
         </div>
-        <div class="header-subtext">Powered by Pahamdata.com</div>
+        <div class="header-subtext">Advanced Indonesian Sentiment Analysis Platform</div>
       </div>
       <div class="header-actions">
-        <span class="header-badge" id="mode-badge">Mode: Lexicon</span>
+        <a href="/training" class="btn btn-ghost btn-sm" id="btn-training-nav">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+          Training
+        </a>
+        <span class="header-badge" id="mode-badge">IndoBERT Transformer</span>
       </div>
     </div>
   </header>
@@ -33,8 +41,14 @@
     <section id="upload-section" class="section">
       <div class="upload-card">
         <div class="upload-header">
-          <h1>Analisis Sentimen Media Sosial</h1>
-          <p class="subtitle">Upload file CSV, Excel, atau HTML scraping untuk menganalisis opini publik secara otomatis</p>
+          <div class="upload-icon-wrap">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              <path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/>
+            </svg>
+          </div>
+          <h1 id="upload-title">Analisis Sentimen Media Sosial Indonesia</h1>
+          <p class="subtitle">Upload dataset CSV, Excel, atau HTML scraping untuk menganalisis opini publik menggunakan <strong>IndoBERT Transformer</strong> — dengan deteksi emosi, sarkasme, dan topic modeling otomatis.</p>
         </div>
 
         <div id="drop-zone" class="drop-zone">
@@ -63,26 +77,43 @@
           <input type="file" id="file-input" accept=".csv,.xlsx,.html,.htm" hidden />
         </div>
 
-        <div class="upload-options" style="display:flex; flex-direction:column; gap:16px; align-items:center; margin-bottom:28px;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <label for="method-select" style="font-size:0.875rem; color:var(--text-secondary); font-weight:500;">Metode Analisis:</label>
-            <select id="method-select" style="padding:8px 12px; background:var(--surface-hover); border:1px solid var(--border); color:var(--text); border-radius:var(--radius-sm); font-size:0.85rem; font-family:'Inter'; outline:none; cursor:pointer;">
-              <option value="hybrid">Hybrid (AI Sampel 200 + Lexicon) - Direkomendasikan</option>
-              <option value="full_ai">Full AI (DeepSeek - Semua Data)</option>
-              <option value="lexicon">Lexicon Lokal (Sangat Cepat, Tanpa AI)</option>
-            </select>
+        <div class="upload-features">
+          <div class="feature-chip"><span class="feature-dot pos"></span>Sentimen (IndoBERT)</div>
+          <div class="feature-chip"><span class="feature-dot emo"></span>Emosi (7 Kategori)</div>
+          <div class="feature-chip"><span class="feature-dot sar"></span>Sarkasme</div>
+          <div class="feature-chip"><span class="feature-dot top"></span>Topic Modeling</div>
+        </div>
+
+        <div class="analysis-options">
+          <div class="analysis-options-row">
+            <span class="analysis-options-label">Analisis:</span>
+            <label class="checkbox-label" id="opt-sentiment-label">
+              <input type="checkbox" id="opt-sentiment" checked /> Sentimen
+            </label>
+            <label class="checkbox-label" id="opt-emotion-label">
+              <input type="checkbox" id="opt-emotion" checked /> Emosi
+            </label>
+            <label class="checkbox-label" id="opt-sarcasm-label">
+              <input type="checkbox" id="opt-sarcasm" checked /> Sarkasme
+            </label>
+            <label class="checkbox-label" id="opt-topics-label">
+              <input type="checkbox" id="opt-topics" checked /> Topik
+            </label>
           </div>
-          <label class="checkbox-label">
-            <input type="checkbox" id="stemming-toggle" />
-            <span>Aktifkan stemming (lebih lambat)</span>
-          </label>
+          <div class="analysis-options-row">
+            <span class="analysis-options-label">Summary:</span>
+            <label class="checkbox-label" id="opt-ai-summary-label">
+              <input type="checkbox" id="opt-ai-summary" checked /> AI Summary (DeepSeek)
+            </label>
+            <span class="analysis-options-hint">— jika tidak dicentang, pakai template cepat</span>
+          </div>
         </div>
 
         <button id="btn-analyze" class="btn btn-primary" disabled>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
-          Analisis Sentimen
+          Mulai Analisis
         </button>
 
         <div class="upload-footer">
@@ -100,7 +131,7 @@
           <div class="loader-ring"></div>
           <div class="loader-ring"></div>
         </div>
-        <h3>Menganalisis Data</h3>
+        <h3>Menganalisis Data dengan IndoBERT</h3>
         <p id="loading-status">Memvalidasi struktur file...</p>
         <div class="loading-progress">
           <div class="progress-bar">
@@ -108,9 +139,12 @@
           </div>
           <div class="progress-steps">
             <span class="step" data-step="1">Validasi</span>
-            <span class="step" data-step="2">Bersihkan</span>
-            <span class="step" data-step="3">Skor</span>
-            <span class="step" data-step="4">Agregasi</span>
+            <span class="step" data-step="2">Preprocessing</span>
+            <span class="step" data-step="3">Sentimen</span>
+            <span class="step" data-step="4">Emosi</span>
+            <span class="step" data-step="5">Sarkasme</span>
+            <span class="step" data-step="6">Topik</span>
+            <span class="step" data-step="7">Agregasi</span>
           </div>
         </div>
       </div>
@@ -129,7 +163,9 @@
       </div>
     </div>
 
-    <!-- Dashboard Section -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- DASHBOARD SECTION -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
     <section id="dashboard-section" class="section hidden" style="padding-top:0">
       <!-- Summary Bar -->
       <div class="summary-bar">
@@ -149,57 +185,225 @@
         </div>
       </div>
 
-      <!-- KPI Strip (7 cards) -->
-      <div class="kpi-strip" id="kpi-strip">
-        <div class="kpi-card"><div class="kpi-label">Total Post</div><div class="kpi-value" id="kpi-total-post">0</div></div>
-        <div class="kpi-card"><div class="kpi-label">Akun Unik</div><div class="kpi-value" id="kpi-accounts">0</div></div>
-        <div class="kpi-card"><div class="kpi-label">Total Views</div><div class="kpi-value" id="kpi-views">0</div></div>
-        <div class="kpi-card"><div class="kpi-label">Total Engagement</div><div class="kpi-value" id="kpi-engagement">0</div></div>
-        <div class="kpi-card"><div class="kpi-label">Positif</div><div class="kpi-value pos" id="kpi-pos-pct">0%</div><span class="kpi-trend" id="trend-pos"></span></div>
-        <div class="kpi-card"><div class="kpi-label">Netral</div><div class="kpi-value neu" id="kpi-neu-pct">0%</div></div>
-        <div class="kpi-card"><div class="kpi-label">Negatif</div><div class="kpi-value neg" id="kpi-neg-pct">0%</div><span class="kpi-trend" id="trend-neg"></span></div>
+      <!-- Dashboard Tab Navigation -->
+      <div class="dashboard-tabs" id="dashboard-tabs">
+        <button class="tab-btn active" data-tab="overview">📊 Overview</button>
+        <button class="tab-btn" data-tab="emotion">🎭 Emosi</button>
+        <button class="tab-btn" data-tab="sarcasm">🎪 Sarkasme</button>
+        <button class="tab-btn" data-tab="topics">📌 Topik</button>
+        <button class="tab-btn" data-tab="trends">📈 Tren</button>
+        <button class="tab-btn" data-tab="influencers">👤 Influencer</button>
+        <button class="tab-btn" data-tab="viral">🔥 Viral</button>
+        <button class="tab-btn" data-tab="summary">📋 Summary</button>
+        <button class="tab-btn" data-tab="data">📄 Data</button>
       </div>
 
-      <!-- Sentiment Overview Panel (3 columns) -->
-      <div class="panel">
-        <div class="panel-header">
-          <h3>Sentimen Overview</h3>
-          <span class="panel-subtitle">Distribusi & Indeks Sentimen</span>
+      <!-- ═══ TAB: Overview ═══ -->
+      <div class="tab-content active" id="tab-overview">
+        <!-- KPI Strip -->
+        <div class="kpi-strip" id="kpi-strip">
+          <div class="kpi-card"><div class="kpi-label">Total Post</div><div class="kpi-value" id="kpi-total-post">0</div></div>
+          <div class="kpi-card"><div class="kpi-label">Akun Unik</div><div class="kpi-value" id="kpi-accounts">0</div></div>
+          <div class="kpi-card"><div class="kpi-label">Total Views</div><div class="kpi-value" id="kpi-views">0</div></div>
+          <div class="kpi-card"><div class="kpi-label">Engagement</div><div class="kpi-value" id="kpi-engagement">0</div></div>
+          <div class="kpi-card"><div class="kpi-label">Positif</div><div class="kpi-value pos" id="kpi-pos-pct">0%</div></div>
+          <div class="kpi-card"><div class="kpi-label">Netral</div><div class="kpi-value neu" id="kpi-neu-pct">0%</div></div>
+          <div class="kpi-card"><div class="kpi-label">Negatif</div><div class="kpi-value neg" id="kpi-neg-pct">0%</div></div>
+          <div class="kpi-card"><div class="kpi-label">Sarkasme</div><div class="kpi-value sar" id="kpi-sarcasm-pct">0%</div></div>
         </div>
-        <div class="panel-body">
-          <div class="sentiment-overview">
-            <div class="sentiment-donut">
-              <canvas id="sentiment-donut"></canvas>
-            </div>
-            <div class="sentiment-gauge">
-              <div class="gauge-value" id="gauge-value">0</div>
-              <div class="gauge-label">Sentiment Index (−100 to +100)</div>
-              <div class="gauge-bar">
-                <div class="gauge-fill" id="gauge-fill" style="width:50%;background:var(--accent-neu)"></div>
+
+        <!-- Sentiment Overview (3 columns) -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Sentimen Overview</h3>
+            <span class="panel-subtitle">Distribusi & Indeks Sentimen</span>
+          </div>
+          <div class="panel-body">
+            <div class="sentiment-overview">
+              <div class="sentiment-donut">
+                <canvas id="sentiment-donut"></canvas>
+              </div>
+              <div class="sentiment-gauge">
+                <div class="gauge-value" id="gauge-value">0</div>
+                <div class="gauge-label">Sentiment Index (−100 to +100)</div>
+                <div class="gauge-bar">
+                  <div class="gauge-fill" id="gauge-fill" style="width:50%;background:var(--accent-neu)"></div>
+                </div>
+              </div>
+              <div class="emotion-radar">
+                <canvas id="emotion-radar"></canvas>
               </div>
             </div>
-            <div class="emotion-radar">
-              <canvas id="emotion-radar"></canvas>
+          </div>
+        </div>
+
+        <!-- Volume Timeline -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Volume Timeline</h3>
+            <span class="panel-subtitle">Tren sentimen harian</span>
+          </div>
+          <div class="panel-body">
+            <div class="volume-chart"><canvas id="volume-chart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Keyword Analysis -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>🔍 Keyword Analysis</h3>
+            <span class="panel-subtitle">Word cloud & frasa populer</span>
+          </div>
+          <div class="panel-body">
+            <div class="keyword-grid">
+              <div>
+                <h4 style="font-size:.85rem;font-weight:600;margin-bottom:12px;color:var(--text2)">Word Cloud</h4>
+                <div id="word-cloud" class="word-cloud"></div>
+              </div>
+              <div>
+                <h4 style="font-size:.85rem;font-weight:600;margin-bottom:12px;color:var(--text2)">Top Bigrams & Trigrams</h4>
+                <div class="bigram-chart"><canvas id="bigram-chart"></canvas></div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Volume Timeline -->
-      <div class="panel">
-        <div class="panel-header">
-          <h3>Volume Timeline</h3>
-          <span class="panel-subtitle">Tren sentimen harian</span>
+      <!-- ═══ TAB: Emotion ═══ -->
+      <div class="tab-content" id="tab-emotion">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-header"><h3>🎭 Distribusi Emosi</h3></div>
+            <div class="panel-body">
+              <div class="chart-container"><canvas id="emotion-donut"></canvas></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h3>📊 Emosi Bar Chart</h3></div>
+            <div class="panel-body">
+              <div class="chart-container"><canvas id="emotion-bar"></canvas></div>
+            </div>
+          </div>
         </div>
-        <div class="panel-body">
-          <div class="volume-chart">
-            <canvas id="volume-chart"></canvas>
+        <div class="panel">
+          <div class="panel-header"><h3>📈 Emotion Trend</h3><span class="panel-subtitle">Perubahan emosi dari waktu ke waktu</span></div>
+          <div class="panel-body">
+            <div class="chart-container-wide"><canvas id="emotion-trend"></canvas></div>
           </div>
         </div>
       </div>
 
-      <!-- Analysis Grid: Viral Posts + Top Accounts -->
-      <div class="analysis-grid">
+      <!-- ═══ TAB: Sarcasm ═══ -->
+      <div class="tab-content" id="tab-sarcasm">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-header"><h3>🎪 Distribusi Sarkasme</h3></div>
+            <div class="panel-body">
+              <div class="chart-container"><canvas id="sarcasm-donut"></canvas></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h3>📝 Contoh Post Sarkastik</h3></div>
+            <div class="panel-body" style="padding:0">
+              <div class="table-wrapper">
+                <table class="data-table" id="sarcasm-table">
+                  <thead><tr><th>Akun</th><th>Konten</th><th>Sentimen</th><th>Confidence</th></tr></thead>
+                  <tbody id="sarcasm-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ TAB: Topics ═══ -->
+      <div class="tab-content" id="tab-topics">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-header"><h3>📌 Top Topics</h3></div>
+            <div class="panel-body">
+              <div class="chart-container"><canvas id="topic-bar"></canvas></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h3>📋 Detail Topik</h3></div>
+            <div class="panel-body" style="padding:0">
+              <div class="table-wrapper">
+                <table class="data-table" id="topic-table">
+                  <thead><tr><th>#</th><th>Topik</th><th>Frekuensi</th><th>Contoh Post</th></tr></thead>
+                  <tbody id="topic-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ TAB: Trends ═══ -->
+      <div class="tab-content" id="tab-trends">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>📈 Sentiment Trend</h3>
+            <div class="trend-toggle">
+              <button class="trend-btn active" data-period="daily">Harian</button>
+              <button class="trend-btn" data-period="weekly">Mingguan</button>
+              <button class="trend-btn" data-period="monthly">Bulanan</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="chart-container-wide"><canvas id="sentiment-trend"></canvas></div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-header"><h3>⚡ Sentiment Spikes</h3></div>
+            <div class="panel-body" style="padding:0">
+              <div class="table-wrapper">
+                <table class="data-table" id="spike-table">
+                  <thead><tr><th>Tanggal</th><th>Tipe</th><th>Magnitude</th><th>Count</th><th>%</th></tr></thead>
+                  <tbody id="spike-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><h3>⚖️ Engagement Weighted Sentiment</h3></div>
+            <div class="panel-body">
+              <div class="chart-container"><canvas id="weighted-sentiment-chart"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ TAB: Influencers ═══ -->
+      <div class="tab-content" id="tab-influencers">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>👤 Influential Account Analysis</h3>
+            <span class="panel-subtitle">Top akun berdasarkan influence score</span>
+          </div>
+          <div class="panel-body">
+            <div class="chart-container"><canvas id="account-chart"></canvas></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h3>📊 Detail Influencer</h3></div>
+          <div class="panel-body" style="padding:0">
+            <div class="table-wrapper">
+              <table class="data-table" id="influencer-table">
+                <thead><tr>
+                  <th>Akun</th><th>Post</th><th>Engagement</th><th>Views</th>
+                  <th>Sentimen</th><th>Emosi</th><th>Sarkasme %</th><th>Score</th>
+                </tr></thead>
+                <tbody id="influencer-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ TAB: Viral ═══ -->
+      <div class="tab-content" id="tab-viral">
         <div class="panel">
           <div class="panel-header">
             <h3>🔥 Top Viral Posts</h3>
@@ -209,103 +413,97 @@
             <div class="table-wrapper">
               <table class="viral-table" id="viral-table">
                 <thead><tr>
-                  <th>Akun</th><th>Konten</th><th>Sentimen</th><th>Engagement</th>
+                  <th>Akun</th><th>Konten</th><th>Sentimen</th><th>Emosi</th>
+                  <th>Sarkasme</th><th>Engagement</th>
                 </tr></thead>
                 <tbody id="viral-body"></tbody>
               </table>
             </div>
           </div>
         </div>
-        <div class="panel">
+      </div>
+
+      <!-- ═══ TAB: Summary ═══ -->
+      <div class="tab-content" id="tab-summary">
+        <div class="panel" style="border-left:3px solid var(--primary)">
           <div class="panel-header">
-            <h3>👤 Top Akun / Influencer</h3>
-            <span class="panel-subtitle">Berdasarkan total engagement</span>
+            <h3>📋 Executive Summary</h3>
+            <div class="export-actions">
+              <button id="btn-download-summary" class="btn btn-ghost btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Markdown
+              </button>
+              <button id="btn-download-docx" class="btn btn-ghost btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                DOCX
+              </button>
+              <button id="btn-download-xlsx" class="btn btn-ghost btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                XLSX
+              </button>
+              <button id="btn-print-summary" class="btn btn-ghost btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                PDF
+              </button>
+            </div>
           </div>
           <div class="panel-body">
-            <div class="account-chart">
-              <canvas id="account-chart"></canvas>
-            </div>
+            <div id="summary-content" class="summary-content"></div>
           </div>
         </div>
       </div>
 
-      <!-- Keyword Analysis Panel -->
-      <div class="panel">
-        <div class="panel-header">
-          <h3>🔍 Keyword Analysis</h3>
-          <span class="panel-subtitle">Word cloud & frasa populer</span>
-        </div>
-        <div class="panel-body">
-          <div class="keyword-grid">
-            <div>
-              <h4 style="font-size:.85rem;font-weight:600;margin-bottom:12px;color:var(--text2)">Word Cloud</h4>
-              <div id="word-cloud" class="word-cloud"></div>
+      <!-- ═══ TAB: Data ═══ -->
+      <div class="tab-content" id="tab-data">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>📄 Detail Data</h3>
+            <div class="export-actions">
+              <button id="btn-download-csv" class="btn btn-ghost btn-sm">CSV</button>
+              <button id="btn-download-json" class="btn btn-ghost btn-sm">JSON</button>
             </div>
-            <div>
-              <h4 style="font-size:.85rem;font-weight:600;margin-bottom:12px;color:var(--text2)">Top Bigrams & Trigrams</h4>
-              <div class="bigram-chart">
-                <canvas id="bigram-chart"></canvas>
+          </div>
+          <div class="panel-body" style="padding:0">
+            <div style="padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border)" class="table-controls">
+              <select id="filter-sentiment" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:.8rem">
+                <option value="">Semua Sentimen</option>
+                <option value="Positive">Positif</option>
+                <option value="Neutral">Netral</option>
+                <option value="Negative">Negatif</option>
+              </select>
+              <select id="filter-emotion" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:.8rem">
+                <option value="">Semua Emosi</option>
+                <option value="Marah">Marah</option>
+                <option value="Senang">Senang</option>
+                <option value="Sedih">Sedih</option>
+                <option value="Takut">Takut</option>
+                <option value="Jijik">Jijik</option>
+                <option value="Terkejut">Terkejut</option>
+                <option value="Netral">Netral</option>
+              </select>
+              <label class="checkbox-label" style="font-size:.8rem">
+                <input type="checkbox" id="filter-sarcasm" /> Sarkastik saja
+              </label>
+              <input type="text" id="filter-search" placeholder="Cari konten..." style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:.8rem;min-width:160px">
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table" id="detail-table">
+                <thead id="table-head"></thead>
+                <tbody id="table-body"></tbody>
+              </table>
+            </div>
+            <div class="table-footer">
+              <span id="table-info">Menampilkan 0 dari 0 data</span>
+              <div class="table-nav">
+                <button id="btn-prev" class="btn btn-ghost btn-sm" disabled>&larr; Sebelumnya</button>
+                <span id="table-page">Hal 1</span>
+                <button id="btn-next" class="btn btn-ghost btn-sm">Selanjutnya &rarr;</button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Executive Summary -->
-      <div class="panel" style="border-left:3px solid var(--primary)">
-        <div class="panel-header">
-          <h3>📋 Executive Summary</h3>
-          <div class="export-actions">
-            <button id="btn-download-summary" class="btn btn-ghost btn-sm">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download .md
-            </button>
-            <button id="btn-print-summary" class="btn btn-ghost btn-sm">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-              PDF
-            </button>
-          </div>
-        </div>
-        <div class="panel-body">
-          <div id="summary-content" class="summary-content"></div>
-        </div>
-      </div>
-
-      <!-- Detail Data Table -->
-      <div class="panel">
-        <div class="panel-header">
-          <h3>📄 Detail Data</h3>
-          <div class="export-actions">
-            <button id="btn-download-csv" class="btn btn-ghost btn-sm">CSV</button>
-            <button id="btn-download-json" class="btn btn-ghost btn-sm">JSON</button>
-          </div>
-        </div>
-        <div class="panel-body" style="padding:0">
-          <div style="padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--border)" class="table-controls">
-            <select id="filter-sentiment" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:.8rem">
-              <option value="">Semua Sentimen</option>
-              <option value="Positive">Positif</option>
-              <option value="Neutral">Netral</option>
-              <option value="Negative">Negatif</option>
-            </select>
-            <input type="text" id="filter-search" placeholder="Cari konten..." style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:.8rem;min-width:160px">
-          </div>
-          <div class="table-wrapper">
-            <table class="data-table" id="detail-table">
-              <thead id="table-head"></thead>
-              <tbody id="table-body"></tbody>
-            </table>
-          </div>
-          <div class="table-footer">
-            <span id="table-info">Menampilkan 0 dari 0 data</span>
-            <div class="table-nav">
-              <button id="btn-prev" class="btn btn-ghost btn-sm" disabled>&larr; Sebelumnya</button>
-              <span id="table-page">Hal 1</span>
-              <button id="btn-next" class="btn btn-ghost btn-sm">Selanjutnya &rarr;</button>
-            </div>
-          </div>
-        </div>
-      </div>
     </section>
   </main>
 
