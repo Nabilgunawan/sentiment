@@ -2,7 +2,11 @@
   env:
     HF_TOKEN: ${{ secrets.HF_TOKEN }}
   run: |
-    git remote add huggingface https://Nabilgunawan:$HF_TOKEN@huggingface.co/spaces/Nabilgunawan/SentimentAnalysist
+    git config user.email "action@github.com"
+    git config user.name "GitHub Action"
+    
+    git remote remove huggingface 2>/dev/null || true
+    git remote add huggingface https://$HF_TOKEN:@huggingface.co/spaces/Nabilgunawan/SentimentAnalysist
     
     # Retry logic with exponential backoff
     max_attempts=3
